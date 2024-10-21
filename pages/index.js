@@ -1,115 +1,277 @@
+import React, { useState, useRef, useEffect } from "react";
+import MessageTextBox from "@/components/MessageTextBox";
+import DashboardLayout from "@/components/DashboardLayout/DashboardLayout";
 import Image from "next/image";
-import localFont from "next/font/local";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
 
 export default function Home() {
-  return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              pages/index.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [selectedChat, setSelectedChat] = useState();
+  const [messages, setMessages] = useState([]);
+  const [isBotTyping, setIsBotTyping] = useState(false);
+  const messagesEndRef = useRef(null);
+  const [newChat, setNewChat] = useState();
+  const [chats, setChats] = useState([]);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+
+  // Function to handle the selected chat
+  const handleChatSelect = (chat) => {
+    setSelectedChat(chat);
+    fetchMessages(chat.id);
+  };
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
+  // Function to fetch messages
+  const fetchMessages = async (chatId) => {
+    // try {
+    //   const response = await axios.get(`/api/messages/${chatId}`);
+    //   const { messages } = response.data;
+    //   if (messages && messages.length > 0) {
+    //     setMessages(messages);
+    //   } else {
+    //     setMessages([]);
+    //   }
+    // } catch (error) {
+
+    //   console.error("Error fetching messages:", error);
+    // }
+  };
+
+  const sendMessage = async ({message, source,}) => {
+    try {
+      const userMessage = {role: "user", text: message};
+      setMessages((prevMessages) =>
+          prevMessages ? [...prevMessages, userMessage] : [userMessage]
+      );
+
+
+      let chat = {
+        id: undefined
+      }
+      if (selectedChat === "new") {
+        // Call the API endpoint to create a new chat
+        // const response = await axios.post("/api/chat");
+        // chat = response.data?.chat
+        // if (response?.data) {
+        //   setSelectedChat(response.data?.chat);
+        //  await fetchChats()
+
+        // }
+        console.log("New")
+      }
+      // Send the message and source to the server
+      // const response = await axios.post(`/api/messages/${selectedChat?.id || chat?.id}`, {
+      //   message,
+      //   source,
+      // });
+      setIsBotTyping(true);
+
+
+      // setMessages((prevMessages) => [
+      //   ...prevMessages,
+      //   {role: "assistant", text: chatbotResponse},
+      // ]);
+
+      // Scroll to the bottom immediately after adding a new message
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({
+          behavior: "auto",
+          block: "end",
+        });
+      }
+      // Dismiss loading indicator
+
+    } catch (error) {
+ 
+      console.error("Error sending message:", error);
+      // Dismiss loading indicator on error
+
+    }
+  };
+
+  const renderMessages = () => {
+    return messages.map((message, index) => (
+      <Box key={index} className="flex  mb-4">
+        {message.role === "assistant" ? (
+          <Box className="relative flex p-2 bg-green-50 gap-2 rounded-md">
+            <Avatar sx={{ ml: "0" }}>
+              <Image src="/bot.png" alt="bot" width={30} height={30} />
+            </Avatar>
+
+            <Box className="flex flex-col relative">
+              <span className="font-bold text-green-700 bg-green-100 px-2 py-1 rounded-md">
+                Pakistan Law
+              </span>
+
+              <Typography
+                variant="body1"
+                className="font-bold"
+                sx={{
+                  paddingTop: "25px",
+                  textAlign: "justify",
+                  lineHeight: "1.6",
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: message.text.replace(/\n/g, "<br>"),
+                }}
+              ></Typography>
+              <button
+                className="absolute top-0 right-0 m-0 p-0 bg-white rounded-full hover:bg-gray-100"
+                onClick={() => handleCopy(message.text)}
+                title="Copy to Clipboard"
+                style={{
+                  border: "none",
+                  outline: "none",
+                  cursor: "pointer",
+                  padding: "5px",
+                  borderRadius: "50%",
+                  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+                }}
+              >
+                <img
+                  src="/copy.png"
+                  alt="Copy"
+                  className="h-5 w-5 text-gray-600"
+                  style={{ width: "20px", height: "20px" }}
+                />
+              </button>
+            </Box>
+          </Box>
+        ) : (
+          <Box className=" p-2 bg-blue-50  rounded-md">
+            <Box className={"flex items-center gap-2"}>
+              <div className="bg-black text-white rounded-full w-7 h-7 flex items-center justify-center">
+                {getUserInitials()}
+              </div>
+              <Typography className="font-bold">You</Typography>
+            </Box>
+
+            <Box className="flex flex-col">
+              <Typography
+                variant="body1"
+                className="font-bold"
+                sx={{ paddingTop: "8px", paddingLeft: "35px" }}
+              >
+                {message.text}
+              </Typography>
+            </Box>
+          </Box>
+        )}
+      </Box>
+    ));
+  };
+
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
+    // Optionally, you can show a toast message indicating successful copy
+
+  };
+
+  const getUserInitials = () => {
+    // Assuming you have access to the user object
+    const { firstName, lastName } = user;
+    let initials = "";
+
+    if (firstName) initials += firstName[0].toUpperCase();
+    if (lastName) initials += lastName[0].toUpperCase();
+
+    return initials;
+  };
+  const fetchChats = async () => {
+    try {
+
+      setChats([]);
+    } catch (error) {
+      console.error("Error fetching chats:", error);
+
+    }
+  };
+  const handleNewChat = async () => {
+    try {
+      handleChatSelect("new");
+    } catch (error) {
+      console.error("Error creating new chat:", error);
+
+    } finally {
+     await fetchChats();
+    }
+  };
+
+
+  return (
+    <DashboardLayout
+      onChatSelect={handleChatSelect}
+      handleNewChatProp={handleNewChat}
+      fetchChats={fetchChats}
+      chats={chats}
+      newChat={newChat}
+      selectedChat={selectedChat}
+
+    >
+      <div className="px-4 sm:px-6 lg:px-8 relative h-full max-w-4xl mx-auto">
+        <div
+          className="relative top-20 md:top-12 overflow-y-auto h-[calc(100vh-15rem)]"
+          style={{
+            overflowY: "scroll",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+          }}
+        >
+          <style jsx>{`
+            ::-webkit-scrollbar {
+              display: none; /* Hide scrollbar for Chrome, Safari, and Opera */
+            }
+            /* Hide scrollbar for Firefox */
+            div::-webkit-scrollbar-track {
+              -webkit-box-shadow: none !important;
+              background-color: transparent !important;
+            }
+          `}</style>
+          <div className="space-y-5">
+            {selectedChat ? (
+              <div>
+                {messages && messages.length > 0 ? (
+                  <div>{renderMessages()}</div>
+                ) : (
+                  <div className="text-center">
+                    <h1 className="text-3xl font-bold text-white mb-4">
+                      How can I help you?
+                    </h1>
+                    <p className="text-lg text-gray-400">
+                      Feel free to ask. I'm here to assist you.
+                    </p>
+                   
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center">
+                <h1 className="text-3xl font-bold text-gray-800 mb-4">
+                  How can I help you?
+                </h1>
+                <p className="text-lg text-gray-600">
+                  Feel free to ask. I'm here to assist you.
+                </p>
+                <div className="bg-gray-100 text-black rounded-lg px-4  py-8 text-center mt-20">
+                
+                  <button
+                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 md:py-4 px-20 md:px-24 rounded-lg text-lg"
+                    onClick={handleNewChat}
+                  >
+                    New Chat
+                  </button>
+                </div>
+               
+              </div>
+            )}
+          </div>
+          {selectedChat && <MessageTextBox onSend={sendMessage} />}
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }
